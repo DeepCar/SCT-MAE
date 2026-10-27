@@ -122,7 +122,7 @@ Configuration files are provided for **KITTI**, **nuScenes**, **Waymo**, **Lyft*
 3. Edit the `DATA_PATH` field inside the corresponding YAML file (e.g., `tools/cfgs/dataset_configs/kitti_dataset.yaml`) to point to your local dataset directory.
 4. Keep the same directory layout expected by OpenPCDet for each dataset.
 
-> Dataset paths and preparation steps are machine-specific; the configs shipped here are starting templates.
+
 
 ---
 
@@ -192,11 +192,7 @@ python demo.py \
 If you use this code, please cite the associated work:
 
 ```bibtex
-@article{amirkhani_sctmae,
-  title   = {Self-Supervised Range-Aware Volumetric Masked Autoencoder with
-             Shape Completion Transformer for LiDAR 3D Object Detection},
-  author  = {Amirkhani, Abdollah and Mandalzadeh, Milad},
-  note    = {Iran University of Science and Technology}
+}
 }
 ```
 
