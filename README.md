@@ -88,7 +88,7 @@ SCT-MAE/
 └── requirements.txt
 ```
 
-> This repository **does not include** datasets, checkpoints, training logs, or generated outputs.
+
 
 ---
 
@@ -128,7 +128,7 @@ Configuration files are provided for **KITTI**, **nuScenes**, **Waymo**, **Lyft*
 
 ## Pre-training (Voxel-MAE)
 
-> **Template only** — adjust the config path, batch size, GPUs, and output directory to your local setup.
+
 
 ```bash
 bash tools/scripts/dist_train_voxel_mae.sh \
@@ -148,7 +148,7 @@ python train_voxel_mae.py \
 
 ## Downstream Training
 
-> **Template only** — replace the detector config (e.g., SECOND / PV-RCNN / CenterPoint variants) and pre-trained weight path as appropriate.
+
 
 ```bash
 bash tools/scripts/dist_train.sh \
@@ -160,7 +160,6 @@ bash tools/scripts/dist_train.sh \
 
 ## Evaluation
 
-> **Template only** — match the config and checkpoint used in training.
 
 ```bash
 bash tools/scripts/dist_test.sh \
