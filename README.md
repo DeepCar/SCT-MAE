@@ -2,7 +2,8 @@
 
 <div align="center">
 
-# Self-Supervised Range-Aware Volumetric Masked Autoencoder with Shape Completion Transformer for LiDAR 3D Object Detection
+<img width="1376" height="768" alt="it7Q78fH7MJTQsEU5I6HMrpRpsY-jScWgxuIRI2FnwatJTPjoQ" src="https://github.com/user-attachments/assets/a1084647-40bb-4564-9bd6-afb9c3bc5bb1" />
+
 
 **Abdollah Amirkhani** · **Milad Mandalzadeh**
 
