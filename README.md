@@ -93,119 +93,43 @@ SCT-MAE/
 
 ---
 
-## Requirements
-
-- Linux (recommended), CUDA-capable GPU
-- Python 3.x with PyTorch
-- Dependencies listed in `requirements.txt`
-- The underlying 3D detection framework is **OpenPCDet** (bundled here as `pcdet/`); follow its upstream documentation for CUDA/ops specifics (e.g., spconv, KITTI devkit evaluation).
-
 ## Installation
 
-```bash
-# 1. Create and activate a virtual environment / conda env (recommended)
+Please refer to [INSTALL.md](docs/INSTALL.md) for the installation of [OpenPCDet(v0.5)](https://github.com/open-mmlab/OpenPCDet).
 
-# 2. Install Python dependencies
-pip install -r requirements.txt
+## Getting Started
 
-# 3. Install the pcdet package in development mode
-python setup.py develop
+Please refer to [GETTING_STARTED.md](docs/GETTING_STARTED.md) .
+
+## Usage
+
+### First Pre-training Voxel-MAE
+
+KITTI:
+
+```
+Train with multiple GPUs:
+bash ./scripts/dist_train_voxel_mae.sh ${NUM_GPUS}  --cfg_file cfgs/kitti_models/voxel_mae_kitti.yaml --batch_size ${BATCH_SIZE}
+
+Train with a single GPU:
+python3 train_voxel_mae.py  --cfg_file cfgs/kitti_models/voxel_mae_kitti.yaml --batch_size ${BATCH_SIZE}
 ```
 
----
+Waymo:
 
-## Dataset Setup
-
-Configuration files are provided for **KITTI**, **nuScenes**, **Waymo**, **Lyft**, and **PandaSet** under `tools/cfgs/dataset_configs/`. The main workflow of this project is documented for **KITTI**, **nuScenes**, and **Waymo**.
-
-1. Download the datasets from their official providers.
-2. Generate the info/annotation files required by OpenPCDet for the chosen dataset (see OpenPCDet dataset preparation instructions).
-3. Edit the `DATA_PATH` field inside the corresponding YAML file (e.g., `tools/cfgs/dataset_configs/kitti_dataset.yaml`) to point to your local dataset directory.
-4. Keep the same directory layout expected by OpenPCDet for each dataset.
-
-
-
----
-
-## Pre-training (Voxel-MAE)
-
-
-
-```bash
-bash tools/scripts/dist_train_voxel_mae.sh \
-    --cfg_file tools/cfgs/voxel_mae_models/voxel_mae_kitti.yaml \
-    --batch_size 4 \
-    --workers 8 \
-    --extra_tag voxel_mae_pretrain
+```
+python3 train_voxel_mae.py  --cfg_file cfgs/kitti_models/voxel_mae_waymo.yaml --batch_size ${BATCH_SIZE}
 ```
 
-Equivalent (single-process) form:
+nuScenes:
 
-```bash
-python train_voxel_mae.py \
-    --cfg_file tools/cfgs/voxel_mae_models/voxel_mae_kitti.yaml \
-    --extra_tag voxel_mae_pretrain
+```
+python3 train_voxel_mae.py  --cfg_file cfgs/kitti_models/voxel_mae_nuscenes.yaml --batch_size ${BATCH_SIZE}
 ```
 
-## Downstream Training
+### Then traing OpenPCDet
 
-
-
-```bash
-bash tools/scripts/dist_train.sh \
-    --cfg_file tools/cfgs/kitti_models/second.yaml \
-    --pretrained_model <path/to/voxel_mae_pretrained.pth> \
-    --batch_size 4 \
-    --workers 8
+Same as [OpenPCDet](https://github.com/open-mmlab/OpenPCDet) with pre-trained model from our Voxel-MAE.
 ```
-
-## Evaluation
-
-
-```bash
-bash tools/scripts/dist_test.sh \
-    --cfg_file tools/cfgs/kitti_models/second.yaml \
-    --ckpt <path/to/trained_checkpoint.pth>
+bash ./scripts/dist_train.sh ${NUM_GPUS}  --cfg_file cfgs/kitti_models/second.yaml --batch_size ${BATCH_SIZE} --pretrained_model ../output/kitti/voxel_mae/ckpt/check_point_10.pth
 ```
-
-Single-inference demo on a sample point cloud:
-
-```bash
-python demo.py \
-    --cfg_file tools/cfgs/kitti_models/second.yaml \
-    --ckpt <path/to/trained_checkpoint.pth> \
-    --data_path <path/to/sample_point_cloud.bin>
-```
-
----
-
-## Limitations & Responsible Reproducibility
-
-- **No data, checkpoints, logs, or outputs are shipped** with this repository; you must obtain and prepare datasets yourself.
-- Absolute numbers may differ across hardware, driver, CUDA/spconv versions, and random seeds. Results reported in the associated paper were produced under the authors' specific environment.
-- **We do not claim independent retraining of paper baselines or guaranteed bit-wise reproducibility.** The provided configs and scripts are templates intended to make the method reproducible *in spirit*; please report your own environment details when comparing results.
-- Large-scale dataset preparation (especially Waymo and nuScenes) requires significant disk space and download time.
-
----
-
-## Citation
-
-If you use this code, please cite the associated work:
-
-```bibtex
-}
-}
-```
-
-## Acknowledgements
-
-- [OpenPCDet](https://github.com/open-mmlab/OpenPCDet) — the underlying 3D object detection framework on which this project is built.
-- The PyTorch and open-source 3D perception communities whose tools made this work possible.
-
----
-
-<div align="center">
-
-*Thanks for visiting — feedback and issues are welcome.* ✨
-
-</div>
