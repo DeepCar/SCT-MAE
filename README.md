@@ -58,78 +58,174 @@ LiDAR Point Cloud
               Pre-trained weights ──► Downstream 3D Detection (train.py)
 ```
 
-Pre-training is performed with the voxel-MAE modules (`voxel_mae.py`, `voxel_mae_res.py`); the learned encoder weights are then used to initialize standard detectors (e.g., SECOND, PV-RCNN, CenterPoint variants) for supervised 3D detection.
-
----
-
-## Repository Structure
-
-```
-SCT-MAE/
-├── pcdet/                      # Core of the OpenPCDet-based 3D detection framework
-├── tools/
-│   ├── cfgs/
-│   │   ├── dataset_configs/    # kitti_dataset.yaml, nuscenes_dataset.yaml,
-│   │   │                       # waymo_dataset.yaml, lyft_dataset.yaml, pandaset_dataset.yaml
-│   │   ├── voxel_mae_models/   # voxel_mae_kitti.yaml, voxel_mae_nuscenes.yaml,
-│   │   │                       # voxel_mae_waymo.yaml (pre-training configs)
-│   │   └── <detector models>/  # SECOND, PV-RCNN, CenterPoint, PV-RCNN++, ... configs
-│   ├── scripts/
-│   │   ├── dist_train.sh
-│   │   ├── dist_test.sh
-│   │   └── dist_train_voxel_mae.sh
-│   ├── train.py
-│   ├── test.py
-│   └── demo.py
-├── train_voxel_mae.py          # Voxel-MAE pre-training entry point
-├── voxel_mae.py                # Volumetric masked autoencoder module
-├── voxel_mae_res.py            # Range-aware variant with residual / range encodings
-├── docs/                       # Documentation and images
-├── setup.py
-└── requirements.txt
-```
-
 
 
 ---
+
+# SCT-MAE: Installation, Dataset Preparation, and Usage
 
 ## Installation
 
-Please refer to [INSTALL.md](docs/INSTALL.md) for the installation of [OpenPCDet(v0.5)](https://github.com/open-mmlab/OpenPCDet).
+Please refer to [INSTALL.md](https://github.com/chaytonmin/Occupancy-MAE/blob/main/docs/INSTALL.md) for the installation of [OpenPCDet (v0.5)](https://github.com/open-mmlab/OpenPCDet).
+
+**Note:** SCT-MAE includes its own `pcdet` implementation. Install the dependencies and run `python setup.py develop` from the SCT-MAE project root rather than replacing its code with a separate OpenPCDet checkout. Ensure that the installed `spconv` supports the `spconv.pytorch` imports used by the model.
 
 ## Getting Started
 
-Please refer to [GETTING_STARTED.md](docs/GETTING_STARTED.md) .
+Please refer to [GETTING_STARTED.md](https://github.com/chaytonmin/Occupancy-MAE/blob/main/docs/GETTING_STARTED.md).
+
+For ONCE-specific dataset preparation, see [ONCE Dataset Preparation and Configuration](#once-dataset-preparation-and-configuration) below.
 
 ## Usage
 
 ### First Pre-training Voxel-MAE
 
-KITTI:
+Run the following commands from the `tools` directory.
 
-```
+**KITTI:**
+
 Train with multiple GPUs:
-bash ./scripts/dist_train_voxel_mae.sh ${NUM_GPUS}  --cfg_file cfgs/kitti_models/voxel_mae_kitti.yaml --batch_size ${BATCH_SIZE}
+
+```bash
+bash ./scripts/dist_train_voxel_mae.sh ${NUM_GPUS} --cfg_file cfgs/kitti_models/voxel_mae_kitti.yaml --batch_size ${BATCH_SIZE}
+```
 
 Train with a single GPU:
-python3 train_voxel_mae.py  --cfg_file cfgs/kitti_models/voxel_mae_kitti.yaml --batch_size ${BATCH_SIZE}
+
+```bash
+python3 train_voxel_mae.py --cfg_file cfgs/kitti_models/voxel_mae_kitti.yaml --batch_size ${BATCH_SIZE}
 ```
 
-Waymo:
+**Waymo:**
 
-```
-python3 train_voxel_mae.py  --cfg_file cfgs/kitti_models/voxel_mae_waymo.yaml --batch_size ${BATCH_SIZE}
-```
-
-nuScenes:
-
-```
-python3 train_voxel_mae.py  --cfg_file cfgs/kitti_models/voxel_mae_nuscenes.yaml --batch_size ${BATCH_SIZE}
+```bash
+python3 train_voxel_mae.py --cfg_file cfgs/kitti_models/voxel_mae_waymo.yaml --batch_size ${BATCH_SIZE}
 ```
 
-### Then traing OpenPCDet
+**nuScenes:**
 
-Same as [OpenPCDet](https://github.com/open-mmlab/OpenPCDet) with pre-trained model from our Voxel-MAE.
+```bash
+python3 train_voxel_mae.py --cfg_file cfgs/kitti_models/voxel_mae_nuscenes.yaml --batch_size ${BATCH_SIZE}
 ```
-bash ./scripts/dist_train.sh ${NUM_GPUS}  --cfg_file cfgs/kitti_models/second.yaml --batch_size ${BATCH_SIZE} --pretrained_model ../output/kitti/voxel_mae/ckpt/check_point_10.pth
+
+**ONCE:**
+
+Train with multiple GPUs (requires the distributed script to support the ONCE configuration):
+
+```bash
+bash ./scripts/dist_train_voxel_mae.sh ${NUM_GPUS} --cfg_file cfgs/once_models/voxel_mae_once.yaml --batch_size ${BATCH_SIZE}
 ```
+
+Train with a single GPU:
+
+```bash
+python3 train_voxel_mae.py --cfg_file cfgs/once_models/voxel_mae_once.yaml --batch_size ${BATCH_SIZE}
+```
+
+### ONCE Dataset Preparation and Configuration
+
+The ONCE extension introduces dataset loading and configuration paths for self-supervised SCT-MAE pre-training on unlabeled LiDAR point clouds. This section documents the intended integration and does not claim completed ONCE experiments.
+
+#### 1. Dataset directory structure
+
+Download the required ONCE split from the [official ONCE dataset website](https://once-for-auto-driving.github.io/download.html#downloads). With the provided `once_dataset.yaml` configuration, organize the point clouds as follows:
+
+```text
+SCT-MAE-main/
+├── data/
+│   └── once/
+│       └── raw_small/
+│           └── data/
+│               ├── 000000/
+│               │   └── lidar_roof/
+│               │       ├── <frame_id>.bin
+│               │       └── ...
+│               ├── 000001/
+│               │   └── lidar_roof/
+│               │       └── ...
+│               └── ...
+├── pcdet/
+└── tools/
+```
+
+The ONCE LiDAR `.bin` files contain four point features: `(x, y, z, intensity)`. The proposed pre-training loader reads these point clouds without requiring 3D bounding-box labels. Depending on the loader implementation, a layout with sequence folders directly under `raw_small/` may also be supported.
+
+#### 2. ONCE dataset loader
+
+```text
+pcdet/datasets/once/once_dataset.py
+```
+
+This module reads LiDAR frames and applies point-feature encoding and voxelization. The ONCE dataset class is registered in:
+
+```text
+pcdet/datasets/__init__.py
+```
+
+The self-supervised loader described here reads point clouds directly; it does **not** implement the original OpenPCDet `create_once_infos` command. That command must not be assumed to work unless the corresponding function has been added.
+
+#### 3. Dataset configuration
+
+```text
+tools/cfgs/dataset_configs/once_dataset.yaml
+```
+
+This configuration specifies `DATA_PATH`, `POINT_CLOUD_RANGE`, point features, voxel size, and the voxelization settings. Adjust `DATA_PATH` to match the local ONCE dataset location.
+
+#### 4. Pre-training model configuration
+
+```text
+tools/cfgs/once_models/voxel_mae_once.yaml
+```
+
+This file references the ONCE dataset configuration and defines the model and optimization parameters. The SCT-MAE backbone implementation is located at:
+
+```text
+pcdet/models/backbones_3d/voxel_mae.py
+```
+
+The training entry point is:
+
+```text
+tools/train_voxel_mae.py
+```
+
+#### 5. Running ONCE pre-training
+
+From the project root:
+
+```bash
+cd tools
+```
+
+Single GPU (example batch size; adjust for available GPU memory):
+
+```bash
+python3 train_voxel_mae.py \
+    --cfg_file cfgs/once_models/voxel_mae_once.yaml \
+    --batch_size 4
+```
+
+Multiple GPUs (example with four GPUs; requires distributed launcher compatibility):
+
+```bash
+bash ./scripts/dist_train_voxel_mae.sh 4 \
+    --cfg_file cfgs/once_models/voxel_mae_once.yaml \
+    --batch_size 4
+```
+
+**Memory consideration:** ONCE's large point-cloud range can lead to high GPU memory use in dense occupancy reconstruction. The example batch size is not a verified hardware recommendation; voxelization resolution and reconstruction memory requirements should be checked before full-scale training.
+
+#### 6. Implementation and evaluation status
+
+The ONCE integration is being extended through dataset loading and model configuration while retaining SCT-MAE's range-aware voxel masking, vector-quantized shape representation, and autoregressive shape completion. Successful end-to-end ONCE training, checkpoint validation, and downstream 3D detection evaluation have not yet been established. No ONCE benchmark scores are reported here.
+
+### Then Training OpenPCDet
+
+Same as [OpenPCDet](https://github.com/open-mmlab/OpenPCDet), using the pre-trained model from Voxel-MAE.
+
+```bash
+bash ./scripts/dist_train.sh ${NUM_GPUS} --cfg_file cfgs/kitti_models/second.yaml --batch_size ${BATCH_SIZE} --pretrained_model ../output/kitti/voxel_mae/ckpt/check_point_10.pth
+```
+
+The downstream example above is for **KITTI**, not ONCE. ONCE downstream detection requires an appropriate detection model configuration, labeled data, and a compatible evaluation pipeline. The checkpoint path must match the actual pre-training output.
