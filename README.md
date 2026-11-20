@@ -214,11 +214,9 @@ bash ./scripts/dist_train_voxel_mae.sh 4 \
     --batch_size 4
 ```
 
-**Memory consideration:** ONCE's large point-cloud range can lead to high GPU memory use in dense occupancy reconstruction. The example batch size is not a verified hardware recommendation; voxelization resolution and reconstruction memory requirements should be checked before full-scale training.
 
-#### 6. Implementation and evaluation status
 
-The ONCE integration is being extended through dataset loading and model configuration while retaining SCT-MAE's range-aware voxel masking, vector-quantized shape representation, and autoregressive shape completion. Successful end-to-end ONCE training, checkpoint validation, and downstream 3D detection evaluation have not yet been established. No ONCE benchmark scores are reported here.
+
 
 ### Then Training OpenPCDet
 
